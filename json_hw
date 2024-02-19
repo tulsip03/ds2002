@@ -1,0 +1,19 @@
+import pandas as pd
+import json
+json_data = 'hw_data.json'
+with open(json_data, 'r') as file:
+    data = json.load(file)
+
+df = pd.read_json(json_data)
+df = pd.json_normalize(data, record_path= ['teams'])
+print(df.head(100))
+
+team_number = df.shape[0]
+print("total number of teams:", team_number)
+
+va_teams = df[df['state'] == 'VA'].shape[0]
+print ('total number of virgina teams:', va_teams)
+
+duplicate_mascots = df.groupby('name').size()
+duplicate_mascots = duplicate_mascots[duplicate_mascots > 1]
+print(duplicate_mascots)
