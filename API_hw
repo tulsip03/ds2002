@@ -1,0 +1,61 @@
+import json
+import requests
+import requests.exceptions
+import pandas as pd
+
+country = input("Enter country name: ")
+print(country)
+def get_api_response(url, response_type):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as errh:
+        return "An Http Error occurred: " + repr(errh)
+    except requests.exceptions.ConnectionError as errc:
+        return "An Error Connecting to the API occurred: " + repr(errc)
+    except requests.exceptions.Timeout as errt:
+        return "A Timeout Error occurred: " + repr(errt)
+    except requests.exceptions.RequestException as err:
+        return "An Unknown Error occurred: " + repr(err)
+
+    if response_type == 'json':
+        result = json.dumps(response.json(), sort_keys=True, indent=4)
+    elif response_type == 'dataframe':
+        result = pd.json_normalize(response.json())
+    else:
+        result = "An unhandled error has occurred!"
+
+    return result
+
+url = "https://restcountries.com/v3.1/name/" + country
+
+answer_type = ['json', 'dataframe']
+
+country_stats = get_api_response(url, answer_type[1])
+
+if type(country_stats) != str:
+    capital_name = country_stats.get('capital')[0]
+    population = country_stats.get('population', 'Unknown')[0]
+    print(capital_name, population)
+
+    df_info = {
+        'Country': [country],
+        'Capital': [capital_name],
+        'Population': [population]
+    }
+
+    df = pd.DataFrame(df_info)
+    json_file_path = 'country_stats.json'
+
+    try:
+        df_existing = pd.read_json(json_file_path)
+        df = pd.concat([df_existing, df], ignore_index=True)
+    except ValueError:
+        print("create new file")
+    except FileNotFoundError:
+        print("file not found")
+
+    df.to_json(json_file_path, orient='records', indent=4)
+    print("saved to JSON file.")
+else:
+    print("Country not valid")
