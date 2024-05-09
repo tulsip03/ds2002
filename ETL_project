@@ -1,0 +1,104 @@
+import os
+import pymysql
+import warnings
+warnings.filterwarnings('ignore')
+
+host_name = "127.0.0.1"
+user_id = "cjw6jz"
+pwd = "cjw6jz!"
+db_name = "employees"
+
+conn = pymysql.connect(host=host_name, user=user_id, password=pwd, database=db_name)
+cursor = conn.cursor()
+
+try:
+
+    cursor.execute("CREATE DATABASE IF NOT EXISTS Hotel_Guestbook")
+    conn.commit()
+    cursor.execute("USE Hotel_Guestbook")
+
+    cursor.execute("DROP TABLE IF EXISTS guests")
+    cursor.execute("DROP TABLE IF EXISTS rooms")
+    cursor.execute("DROP TABLE IF EXISTS bookings")
+    cursor.execute("DROP TABLE IF EXISTS payment")
+    cursor.execute("DROP TABLE IF EXISTS RoomStatus")
+    conn.commit()
+    print("All tables dropped")
+#add 5 tables
+
+#guests
+#rooms
+#bookings
+#payments
+#RoomStatus
+
+
+    cursor.execute("""
+
+    CREATE TABLE IF NOT EXISTS guests (
+        GuestID INT AUTO_INCREMENT PRIMARY KEY,
+        FirstName VARCHAR(15) NOT NULL,
+        LastName VARCHAR(15) NOT NULL,
+        DOB DATE NOT NULL,
+    )
+    """)
+    conn.commit()
+    cursor.execute("""
+   
+    CREATE TABLE IF NOT EXISTS rooms (
+        RoomID INT AUTO_INCREMENT PRIMARY KEY,
+        RoomNum VARCHAR(10),
+        Rate DECIMAL(10, 2),
+        Status ENUM('available', 'occupied') DEFAULT 'available'
+    )
+    """)
+    conn.commit()
+    cursor.execute("""
+    
+    CREATE TABLE IF NOT EXISTS bookings (
+            BookingID INT AUTO_INCREMENT PRIMARY KEY,
+            GuestID INT,
+            RoomID INT,
+            CheckInDate DATE,
+            CheckOutDate DATE,
+            TotalPrice DECIMAL(10, 2),
+            BookingStatus ENUM('confirmed', 'cancelled') DEFAULT 'confirmed',
+            FOREIGN KEY (GuestID) REFERENCES Guests(GuestID),
+            FOREIGN KEY (RoomID) REFERENCES Rooms(RoomID)
+        )
+        """)
+    conn.commit()
+    cursor.execute("""
+    
+    CREATE TABLE IF NOT EXISTS payments (
+            PaymentID INT AUTO_INCREMENT PRIMARY KEY,
+            BookingID INT,
+            PaymentDate DATE,
+            Amount DECIMAL(10, 2),
+            FOREIGN KEY (BookingID) REFERENCES Bookings(BookingID)
+            )
+        """)
+    conn.commit()
+    cursor.execute("""
+    
+    CREATE TABLE IF NOT EXISTS RoomStatus (
+            RoomID INT,
+            Date DATE,
+            Status ENUM('clean', 'dirty', 'maintenance needed'),
+            PRIMARY KEY (RoomID, Date),
+            FOREIGN KEY (RoomID) REFERENCES Rooms(RoomID)
+        )
+    """)
+    conn.commit()
+
+
+except Exception as e:
+    print(f"Error: {e}")
+
+cursor.close()
+conn.close()
+
+conn_employees = pymysql.connect(host=host_name, user=user_id, password=pwd, database=db_name)
+cursor_employees = conn_employees.cursor()
+conn_guestbook = pymysql.connect(host=host_name, user=user_id, password=pwd, database="Hotel_Guestbook")
+cursor_guestbook = conn_guestbook.cursor()
